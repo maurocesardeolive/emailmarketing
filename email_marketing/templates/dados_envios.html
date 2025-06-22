@@ -1,0 +1,17 @@
+<!-- templates/dados_envios.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dados dos Envios</title>
+</head>
+<body>
+    <h1>Dados dos Envios</h1>
+    <table border="1">
+        <tr><th>Campanha</th><th>Abertos</th><th>Clicados</th></tr>
+        {% for dado in dados %}
+        <tr><td>{{ dado.campanha }}</td><td>{{ dado.abertos }}</td><td>{{ dado.clicados }}</td></tr>
+        {% endfor %}
+    </table>
+    <a href="/">Voltar</a>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!-- templates/lista_clientes.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Clientes</title>
+</head>
+<body>
+    <h1>Lista de Clientes</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Upload CSV</button>
+    </form>
+    <h2>Clientes na Lista:</h2>
+    <table border="1">
+        <tr><th>Nome</th><th>Email</th></tr>
+        {% for email in emails %}
+        <tr><td>{{ email.nome }}</td><td>{{ email.email }}</td></tr>
+        {% endfor %}
+    </table>
+    <a href="/">Voltar</a>
+</body>
+</html>

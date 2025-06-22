@@ -1,0 +1,18 @@
+<!-- templates/excluidos.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>E-mails Excluídos</title>
+</head>
+<body>
+    <h1>E-mails Excluídos</h1>
+    <table border="1">
+        <tr><th>Nome</th><th>Email</th></tr>
+        {% for email in emails %}
+        <tr><td>{{ email.nome }}</td><td>{{ email.email }}</td></tr>
+        {% endfor %}
+    </table>
+    <a href="/download-excluidos">Baixar CSV</a>
+    <br><a href="/">Voltar</a>
+</body>
+</html>

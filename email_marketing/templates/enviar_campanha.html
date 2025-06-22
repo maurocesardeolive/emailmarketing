@@ -1,0 +1,29 @@
+<!-- templates/enviar_campanha.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enviar Campanha</title>
+</head>
+<body>
+    <h1>Enviar Campanha</h1>
+    <form method="POST">
+        <label>Nome da Campanha:</label><br>
+        <input type="text" name="campanha" required><br><br>
+
+        <label>Assunto:</label><br>
+        <input type="text" name="assunto" required><br><br>
+
+        <label>Remetente Nome:</label><br>
+        <input type="text" name="remetente_nome" required><br><br>
+
+        <label>Remetente Email:</label><br>
+        <input type="email" name="remetente_email" required><br><br>
+
+        <label>Conteúdo da Campanha:</label><br>
+        <textarea name="conteudo" rows="10" cols="80" required></textarea><br><br>
+
+        <button type="submit">Enviar</button>
+    </form>
+    <a href="/">Voltar</a>
+</body>
+</html>
