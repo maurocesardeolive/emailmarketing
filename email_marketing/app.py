@@ -140,3 +140,16 @@ def enviar_email(destinatario, assunto, conteudo, remetente_nome, remetente_emai
             print(f'E-mail enviado para {destinatario}')
     except Exception as e:
         print(f'Erro ao enviar para {destinatario}: {e}')
+        enviar_email(
+    destinatario="cliente@example.com",
+    assunto="Minha Campanha",
+    conteudo="<h1>Olá Cliente!</h1><p>Mensagem...</p>",
+    remetente_nome="Seu Nome",
+    remetente_email="seuemail@gmail.com",
+    senha="sua_senha_do_app"
+)
+        import os
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
