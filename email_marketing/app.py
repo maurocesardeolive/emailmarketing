@@ -3,17 +3,38 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 import csv
 import os
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from dotenv import load_dotenv
 
+# ✅ Carregar variáveis do .env
+load_dotenv()
+
+# 🔥 Configuração do app
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///email_marketing.db'
+
+# ✅ Banco de Dados — PostgreSQL para produção, SQLite para desenvolvimento
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///email_marketing.db'
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
+
 db = SQLAlchemy(app)
 
-# Banco de dados
+# ✅ Modelos do Banco
 class EmailList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100))
     email = db.Column(db.String(100), unique=True)
+
 
 class SendData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -21,17 +42,20 @@ class SendData(db.Model):
     abertos = db.Column(db.Integer)
     clicados = db.Column(db.Integer)
 
+
 class Excluded(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100))
     email = db.Column(db.String(100), unique=True)
 
-# Página Inicial
+
+# ✅ Página Inicial
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Página Lista de Clientes
+
+# ✅ Página Lista de Clientes
 @app.route('/lista-clientes', methods=['GET', 'POST'])
 def lista_clientes():
     if request.method == 'POST':
@@ -42,7 +66,7 @@ def lista_clientes():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            with open(filepath, newline='') as csvfile:
+            with open(filepath, newline='', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
                     novo = EmailList(nome=row['Nome'], email=row['Email'])
@@ -53,16 +77,18 @@ def lista_clientes():
     emails = EmailList.query.all()
     return render_template('lista_clientes.html', emails=emails)
 
-# Página E-mails Excluídos
+
+# ✅ Página E-mails Excluídos
 @app.route('/excluidos')
 def excluidos():
     emails = Excluded.query.all()
     return render_template('excluidos.html', emails=emails)
 
+
 @app.route('/download-excluidos')
 def download_excluidos():
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'excluidos.csv')
-    with open(filepath, 'w', newline='') as csvfile:
+    with open(filepath, 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ['Nome', 'Email']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -70,13 +96,15 @@ def download_excluidos():
             writer.writerow({'Nome': email.nome, 'Email': email.email})
     return send_file(filepath, as_attachment=True)
 
-# Página Dados dos Envios
+
+# ✅ Página Dados dos Envios
 @app.route('/dados-envios')
 def dados_envios():
     dados = SendData.query.all()
     return render_template('dados_envios.html', dados=dados)
 
-# Página Enviar Campanhas (Simples)
+
+# ✅ Enviar Campanha
 @app.route('/enviar-campanha', methods=['GET', 'POST'])
 def enviar_campanha():
     if request.method == 'POST':
@@ -84,6 +112,7 @@ def enviar_campanha():
         assunto = request.form['assunto']
         remetente_nome = request.form['remetente_nome']
         remetente_email = request.form['remetente_email']
+        senha = request.form['senha']
         conteudo = request.form['conteudo']
 
         emails = EmailList.query.all()
@@ -91,11 +120,18 @@ def enviar_campanha():
         clicados = 0
 
         for email in emails:
-            # Simulação de envio de e-mail (implementar SMTP real)
-            print(f"Enviando para: {email.email}")
-            print(f"Assunto: {assunto}")
-            print(f"De: {remetente_nome} <{remetente_email}>")
-            print(f"Conteúdo: {conteudo}")
+            try:
+                enviar_email(
+                    destinatario=email.email,
+                    assunto=assunto,
+                    conteudo=conteudo,
+                    remetente_nome=remetente_nome,
+                    remetente_email=remetente_email,
+                    senha=senha
+                )
+                print(f"E-mail enviado para {email.email}")
+            except Exception as e:
+                print(f"Erro ao enviar para {email.email}: {e}")
 
         registro = SendData(campanha=campanha, abertos=abertos, clicados=clicados)
         db.session.add(registro)
@@ -105,7 +141,8 @@ def enviar_campanha():
 
     return render_template('enviar_campanha.html')
 
-# Cancelar Subscrição
+
+# ✅ Cancelar Subscrição
 @app.route('/cancelar/<email>')
 def cancelar(email):
     cliente = EmailList.query.filter_by(email=email).first()
@@ -116,14 +153,8 @@ def cancelar(email):
         db.session.commit()
     return "Seu e-mail foi removido com sucesso."
 
-if __name__ == '__main__':
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    db.create_all()
-    app.run(debug=True)
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
+# ✅ Função de Envio de E-mails
 def enviar_email(destinatario, assunto, conteudo, remetente_nome, remetente_email, senha):
     msg = MIMEMultipart()
     msg['From'] = f"{remetente_nome} <{remetente_email}>"
@@ -132,46 +163,18 @@ def enviar_email(destinatario, assunto, conteudo, remetente_nome, remetente_emai
 
     msg.attach(MIMEText(conteudo, 'html'))
 
-    try:
-        with smtplib.SMTP('smtp.gmail.com', 587) as servidor:
-            servidor.starttls()
-            servidor.login(remetente_email, senha)
-            servidor.send_message(msg)
-            print(f'E-mail enviado para {destinatario}')
-    except Exception as e:
-        print(f'Erro ao enviar para {destinatario}: {e}')
-        enviar_email(
-    destinatario="cliente@example.com",
-    assunto="Minha Campanha",
-    conteudo="<h1>Olá Cliente!</h1><p>Mensagem...</p>",
-    remetente_nome="Seu Nome",
-    remetente_email="seuemail@gmail.com",
-    senha="sua_senha_do_app"
-)
-        import os
+    with smtplib.SMTP('smtp.gmail.com', 587) as servidor:
+        servidor.starttls()
+        servidor.login(remetente_email, senha)
+        servidor.send_message(msg)
 
+
+# ✅ Rodar o App
 if __name__ == '__main__':
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    db.create_all()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-    import os
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
-
-# Banco de dados PostgreSQL
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
-
-# Solução de segurança para algumas versões do SQLAlchemy
-if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-from dotenv import load_dotenv
-load_dotenv()
-from flask_sqlalchemy import SQLAlchemy
-db = SQLAlchemy(app)
 
 
