@@ -1,0 +1,106 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Página Inicial</title>
+</head>
+<body>
+    <h1>Página Inicial</h1>
+    <ul>
+        <li><a href="/enviar-campanha">Enviar Campanha</a></li>
+        <li><a href="/lista-clientes">Lista de Clientes</a></li>
+        <li><a href="/dados-envios">Dados dos Envios</a></li>
+        <li><a href="/excluidos">E-mails Excluídos</a></li>
+    </ul>
+</body>
+</html>
+
+<!-- templates/lista_clientes.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Clientes</title>
+</head>
+<body>
+    <h1>Lista de Clientes</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Upload CSV</button>
+    </form>
+    <h2>Clientes na Lista:</h2>
+    <table border="1">
+        <tr><th>Nome</th><th>Email</th></tr>
+        {% for email in emails %}
+        <tr><td>{{ email.nome }}</td><td>{{ email.email }}</td></tr>
+        {% endfor %}
+    </table>
+    <a href="/">Voltar</a>
+</body>
+</html>
+
+<!-- templates/excluidos.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>E-mails Excluídos</title>
+</head>
+<body>
+    <h1>E-mails Excluídos</h1>
+    <table border="1">
+        <tr><th>Nome</th><th>Email</th></tr>
+        {% for email in emails %}
+        <tr><td>{{ email.nome }}</td><td>{{ email.email }}</td></tr>
+        {% endfor %}
+    </table>
+    <a href="/download-excluidos">Baixar CSV</a>
+    <br><a href="/">Voltar</a>
+</body>
+</html>
+
+<!-- templates/dados_envios.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dados dos Envios</title>
+</head>
+<body>
+    <h1>Dados dos Envios</h1>
+    <table border="1">
+        <tr><th>Campanha</th><th>Abertos</th><th>Clicados</th></tr>
+        {% for dado in dados %}
+        <tr><td>{{ dado.campanha }}</td><td>{{ dado.abertos }}</td><td>{{ dado.clicados }}</td></tr>
+        {% endfor %}
+    </table>
+    <a href="/">Voltar</a>
+</body>
+</html>
+
+<!-- templates/enviar_campanha.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enviar Campanha</title>
+</head>
+<body>
+    <h1>Enviar Campanha</h1>
+    <form method="POST">
+        <label>Nome da Campanha:</label><br>
+        <input type="text" name="campanha" required><br><br>
+
+        <label>Assunto:</label><br>
+        <input type="text" name="assunto" required><br><br>
+
+        <label>Remetente Nome:</label><br>
+        <input type="text" name="remetente_nome" required><br><br>
+
+        <label>Remetente Email:</label><br>
+        <input type="email" name="remetente_email" required><br><br>
+
+        <label>Conteúdo da Campanha:</label><br>
+        <textarea name="conteudo" rows="10" cols="80" required></textarea><br><br>
+
+        <button type="submit">Enviar</button>
+    </form>
+    <a href="/">Voltar</a>
+</body>
+</html>
